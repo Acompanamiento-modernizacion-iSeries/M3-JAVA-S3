@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static BigDecimal saldo;
+    private static BigDecimal saldo= BigDecimal.ZERO;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -48,7 +48,7 @@ public class Main {
                 default:
                     System.out.println("Opción no válida. Seleccione una opción del menú.");
             }
-        } while (opcion != 5);
+        } while (opcion != 7);
 
         scanner.close();
     }
@@ -58,7 +58,9 @@ public class Main {
         System.out.println("2. Realizar depósito");
         System.out.println("3. Realizar retiro");
         System.out.println("4. Calcular intereses");
-        System.out.println("5. Salir");
+        System.out.println("5. Calcular interés compuesto");
+        System.out.println("6. Verificar elegibilidad para crédito");
+        System.out.println("7. Salir");
     }
 
     private static void consultarSaldo() {
@@ -99,48 +101,53 @@ public class Main {
             System.out.println("La tasa de interés debe ser positiva.");
         } else {
             BigDecimal intereses = saldo.multiply(tasaInteres.divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP));
-            System.out.printf("Los intereses generados sobre el saldo de $%.2f a una tasa de %.2f%% son: $%.2f%n",
-                    saldo.setScale(2, RoundingMode.HALF_UP),
-                    tasaInteres.setScale(2, RoundingMode.HALF_UP),
-                    intereses.setScale(2, RoundingMode.HALF_UP));
+            System.out.printf("Los intereses generados sobre el saldo de $%s a una tasa de %s%% son: $%s%n",
+                    saldo.setScale(2, RoundingMode.HALF_UP).toString(),
+                    tasaInteres.setScale(2, RoundingMode.HALF_UP).toString(),
+                    intereses.setScale(2, RoundingMode.HALF_UP).toString());
         }
     }
 
     private static void calcularInteresComp(Scanner scanner) {
-        System.out.print("Ingrese la tasa de interés (en %): ");
-        String tasa = scanner.nextLine();
-        System.out.print("Ingrese el tiempo (en años): ");
-        String tiempo = scanner.nextLine();
-        System.out.print("Ingrese el número de períodos por año: ");
-        String numPeriodos = scanner.nextLine();
+        System.out.print("Ingrese la tasa de interés anual (en %): ");
+        BigDecimal tasaInteres = leerTasaInteres(scanner);
 
-        BigDecimal interesCompuesto = calcularInteresCompuesto(tasa, tiempo, numPeriodos);
-        System.out.println("Interés compuesto: " + interesCompuesto);
+        System.out.print("Ingrese el tiempo (en años): ");
+        BigDecimal tiempo = leerMonto(scanner);
+
+        System.out.print("Ingrese el número de períodos por año: ");
+        BigDecimal numPeriodos = leerMonto(scanner);
+
+        try {
+            BigDecimal tasaInteresDecimal = tasaInteres.divide(BigDecimal.valueOf(100), 8, RoundingMode.HALF_UP);
+            BigDecimal unoMasRentreN = BigDecimal.ONE.add(tasaInteresDecimal.divide(numPeriodos, 8, RoundingMode.HALF_UP));
+            BigDecimal exponent = numPeriodos.multiply(tiempo);
+            BigDecimal monto = saldo.multiply(unoMasRentreN.pow(exponent.intValueExact(), new java.math.MathContext(8, RoundingMode.HALF_UP)));
+            System.out.printf("El interés compuesto es: $%.2f%n", monto.subtract(saldo).setScale(2, RoundingMode.HALF_UP));
+        } catch (ArithmeticException e) {
+            System.out.println("Error en el cálculo del interés compuesto: " + e.getMessage());
+        }
     }
 
     private static void validarElegCredito(Scanner scanner) {
-        System.out.print("Ingrese el ingreso anual: ");
-        String ingresoAnual = scanner.nextLine();
-        System.out.print("Ingrese la deuda total: ");
-        String deuda = scanner.nextLine();
+        System.out.print("Ingrese el ingreso anual: $");
+        BigDecimal ingresoAnual = leerMonto(scanner);
 
-        boolean elegible = validarElegibilidadCredito(ingresoAnual, deuda);
+        System.out.print("Ingrese la deuda total: $");
+        BigDecimal deudaTotal = leerMonto(scanner);
+
+        boolean elegible = validarElegibilidadCredito(ingresoAnual, deudaTotal);
         System.out.println(elegible ? "Elegible para crédito." : "No elegible para crédito.");
     }
 
-    public static BigDecimal calcularInteresCompuesto(String tasa, String tiempo, String numPeriodos) {
-        BigDecimal tasaDecimal = new BigDecimal(tasa).divide(BigDecimal.valueOf(100), MathContext.DECIMAL128);
-        BigDecimal tiempoDecimal = new BigDecimal(tiempo);
-        BigDecimal periodosDecimal = new BigDecimal(numPeriodos);
-
-        BigDecimal montoFinal = saldo.multiply(BigDecimal.ONE.add(tasaDecimal.divide(periodosDecimal, MathContext.DECIMAL128)).pow(periodosDecimal.multiply(tiempoDecimal).intValue(), MathContext.DECIMAL128));
-        return montoFinal.subtract(saldo).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    public static boolean validarElegibilidadCredito(String ingresoAnual, String deuda) {
-        BigDecimal ingreso = new BigDecimal(ingresoAnual);
-        BigDecimal deudaTotal = new BigDecimal(deuda);
-        return ingreso.compareTo(deudaTotal.multiply(BigDecimal.valueOf(0.5))) > 0;
+    private static boolean validarElegibilidadCredito(BigDecimal ingresoAnual, BigDecimal deudaTotal) {
+        try {
+            BigDecimal limite = ingresoAnual.multiply(BigDecimal.valueOf(0.5));
+            return ingresoAnual.compareTo(deudaTotal) > 0 && deudaTotal.compareTo(limite) <= 0;
+        } catch (ArithmeticException e) {
+            System.out.println("Error en la validación de elegibilidad para crédito: " + e.getMessage());
+            return false;
+        }
     }
 
     private static BigDecimal leerMonto(Scanner scanner) {
