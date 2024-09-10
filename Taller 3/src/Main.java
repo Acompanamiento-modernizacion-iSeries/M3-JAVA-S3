@@ -37,8 +37,8 @@ public class Main {
     public static BigDecimal obtenerSaldoInicial(Scanner sc) {
         System.out.println("Ingrese su saldo inicial:");
         while (!sc.hasNextBigDecimal()) {
-            System.out.println("Saldo inválido, ingrese un número válido:");
-            sc.next(); // limpiar entrada inválida
+            System.out.println("No es un saldo válido");
+            sc.next();
         }
         return sc.nextBigDecimal();
     }
@@ -60,13 +60,12 @@ public class Main {
         System.out.println("Ingrese el número de meses para calcular los intereses simples:");
         int meses = sc.nextInt();
         if (meses < 0) {
-            System.out.println("Entrada no válida. Los meses no pueden ser negativos.");
+            System.out.println("Entrada de datos incorrecta");
         } else {
             BigDecimal interesMensual = interes.divide(new BigDecimal("12"));
             BigDecimal interesGenerado = saldo.multiply(interesMensual).multiply(new BigDecimal(meses));
             saldo = saldo.add(interesGenerado);
-            System.out.println("El cálculo de interés simple es de: $" + interesGenerado +
-                    ". Su saldo total es de: $" + saldo);
+            System.out.println("El cálculo de interés simple es de: $" + interesGenerado + ". Su saldo total es de: $" + saldo);
         }
         return saldo;
     }
@@ -75,7 +74,7 @@ public class Main {
         System.out.println("Ingrese el número de meses para calcular los intereses compuestos:");
         int meses = sc.nextInt();
         if (meses < 0) {
-            System.out.println("Entrada no válida. Los meses no pueden ser negativos.");
+            System.out.println("Entrada de datos incorrecta");
         } else {
             BigDecimal interesMensual = interes.divide(new BigDecimal("12"));
             BigDecimal saldoFinal = saldo.multiply(
