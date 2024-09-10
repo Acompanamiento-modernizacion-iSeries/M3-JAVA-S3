@@ -52,10 +52,10 @@ public class AdministracionCuentas {
                     break;
                 case 5:
                     i = 6;
-                    System.out.println("Gracias por usar nuestros servicios Señor "+nombre);
+                    System.out.println("Gracias por usar nuestros servicios Sr "+nombre);
                     break;
                 default:
-                    System.out.println("Opcion no valida: \n");
+                    System.out.println("Transaccion no valida: \n");
                     break;
             }
 
